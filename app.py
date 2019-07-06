@@ -40,20 +40,9 @@ assistant = AssistantV1(
     iam_apikey='amF01PbQcjLXKTbOodjJ3wDLJBcdNS2mRKHaaQqELsfE',
     url='https://gateway.watsonplatform.net/assistant/api'
 )
-#assistant.disable_SSL_verification()
 assistant.set_http_config({'timeout': 100})
 
-#workspace = assistant.create_workspace(
-    #name=configWorkspace.data['name'],
-    #description=configWorkspace.data['description'],
-    #language=configWorkspace.data['language'],
-    #intents=configWorkspace.data['intents'],
-    #entities=configWorkspace.data['entities'],
-    #counterexamples=configWorkspace.data['counterexamples'],
-    #metadata=configWorkspace.data['metadata']).get_result()
-
 workspace = assistant.get_workspace(workspace_id="0f156808-de0f-4c7c-a97f-408808cabe79", export=True).get_result()
-
 workspace_id = workspace['workspace_id']
 
 #Rota Inicial
@@ -84,24 +73,20 @@ def chat():
         response = assistant.message(
             workspace_id=workspace_id,
             input={
-                'text': 'Olá'
+               'text': 'Olá'
             },
             context={
-                'noob': True
+               cliente['perfil'] : True
             }
         ).get_result()
-
-        return jsonify(cliente=cliente,sessao=sessao,resposta=response) 
+        
+        return jsonify(cliente=cliente, resposta=response["output"]["text"], idConversa=response["context"]["conversation_id"]) 
         
     if request.method == 'POST':
         req = request.json
-        response = assistant.message(workspace_id=req["_id"], input={'text': req["text"]}).get_result()
-        
-        print(response)
-        print(json.dumps(response, indent=2))
+        response = assistant.message(workspace_id=workspace_id, input={'text': req["text"]}).get_result()
 
-
-        return jsonify(menssagem={"sucesso":"true"},nextreq={"_id":req["id"]}) 
+        return jsonify(resposta=response["output"]["text"], idConversa=response["context"]["conversation_id"]) 
 
 #Endpoint GET para identificar usuario
 @app.route('/criardado')
