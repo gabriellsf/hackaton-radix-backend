@@ -1,5 +1,7 @@
 import uuid
 import base64
+import requests
+import json
 from pymongo import MongoClient
 from flask import Flask 
 from flask import request
@@ -13,6 +15,10 @@ from chatterbot.trainers import ListTrainer
 from chatterbot.response_selection import get_first_response
 
 
+API_FACES_ENDPOINT = 'https://radixhack.cognitiveservices.azure.com/face/v1.0/'
+detectUrl = API_FACES_ENDPOINT+"/detect"
+verifyUrl = API_FACES_ENDPOINT+"/verify"
+FACES_KEY = '9a7ff2d4826646de85ffc1fbbb6fba5b'
 
 #Conexão com banco ElasticSearch
 es = Elasticsearch(
@@ -78,6 +84,47 @@ def chat():
 
         if req['foto'] != None and req['foto'] != "":
             decoded = base64.decodebytes(req['foto'])
+
+            
+
+            headers = {
+                "Content-Type" : "application/octet-stream",
+                "Ocp-Apim-Subscription-Key" : FACES_KEY
+            }
+
+            r = requests.post(detectUrl, data=decoded, headers=headers)
+            data = r.json()
+
+            if len(data['faceId']) != 2:
+                return 
+
+
+
+            headers = {
+                "Content-Type" : "application/json",
+                "Ocp-Apim-Subscription-Key" : FACES_KEY
+            }
+
+            body = {
+                "faceId1" : data['faceId'][0],
+                "faceId1" : data['faceId'][1],
+            }
+
+            r = requests.post(verifyUrl, data=body, headers=headers)
+            data = r.json()
+
+            confidence = data['confidence']
+
+
+
+
+            
+
+
+
+
+
+
 
 
             resp = {"text":"sucesso"}
