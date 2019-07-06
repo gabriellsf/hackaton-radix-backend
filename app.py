@@ -48,9 +48,6 @@ trainer.train(conversa)
 #Rota Inicial
 @app.route('/')
 def hello():
-    response = bot.get_response('Oi')
-    print(response)
-
     return "Bem vindo a API do Atendente CPFL"
 
 
@@ -77,8 +74,7 @@ def chat():
     if request.method == 'POST':
         req = request.json
         resp = bot.get_response(req['resposta'])
-        print(resp)
-        return jsonify(menssagem={"sucesso":"true"}) 
+        return jsonify(menssagem={"sucesso":"true","resposta":resp.text}) 
 
 def prepareMongoToEs(data):
     data["mongo_id"] = data["_id"]
