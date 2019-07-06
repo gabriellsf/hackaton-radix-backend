@@ -10,31 +10,30 @@ from elasticsearch import Elasticsearch
 
 #Conexão com banco ElasticSearch
 es = Elasticsearch(
-    'meu-favorito-dashboa-543171073.ap-southeast-2.bonsaisearch.net',
-    http_auth=('6vi035crgt', 'w8no1zyb2i'),
+    'cluster-gabs-7913461332.us-west-2.bonsaisearch.net',
+    http_auth=('wayhnmmp6q', 'oqoibzr07b'),
     scheme="https",
     port=443,
     verify_certs=False 
 )
 
 #Conexão com banco MongoDB
-username = urllib.parse.quote_plus('root')
-password = urllib.parse.quote_plus('44KXC4kr2Jk8r3mV')
-client = MongoClient('mongodb://%s:%s@meu-favorito.sv.ufabcnext.com:15003/' % (username, password))
-db = client.uberhack
+username = urllib.parse.quote_plus('gabs')
+password = urllib.parse.quote_plus('admin')
+client = MongoClient('mongodb+srv://%s:%s@cluster0-dp1ye.mongodb.net/test?retryWrites=true&w=majority' % (username, password))
+db = client.cpfl
 
 #Rota Inicial
 @app.route('/')
 def hello():
-    Bem vindo a API do Atendente CPFL         
+    Bem vindo a API do Atendente CPFL
 
 
 #Endpoint GET para identificar usuario
 @app.route('/favorites', methods=['GET','POST'])
 def favoritos():
     if request.method == 'GET':
-        favoritos = db.favorito
-        resultado = []
+        cliente = db.cliente
 
         for favorito in favoritos.find({"cliente.cliente_empresa_id": request.args.get('cliente')}):
             print(favorito)
