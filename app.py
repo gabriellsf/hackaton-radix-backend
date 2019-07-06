@@ -36,14 +36,25 @@ client = MongoClient('mongodb+srv://%s:%s@cluster0-dp1ye.mongodb.net/test?retryW
 db = client.cpfl
 
 assistant = AssistantV1(
-    version='2019-07-06',
+    version='2019-07-07',
     iam_apikey='amF01PbQcjLXKTbOodjJ3wDLJBcdNS2mRKHaaQqELsfE',
     url='https://gateway.watsonplatform.net/assistant/api'
 )
 assistant.set_http_config({'timeout': 100})
 
-workspace = assistant.get_workspace(workspace_id="0f156808-de0f-4c7c-a97f-408808cabe79", export=True).get_result()
+#workspace = assistant.create_workspace(
+    #name=configWorkspace.data['name'],
+    #description=configWorkspace.data['description'],
+    #language=configWorkspace.data['language'],
+    #intents=configWorkspace.data['intents'],
+    #entities=configWorkspace.data['entities'],
+    #counterexamples=configWorkspace.data['counterexamples'],
+    #metadata=configWorkspace.data['metadata']
+#).get_result()
+
+workspace = assistant.get_workspace(workspace_id="0f156808-de0f-4c7c-a97f-408808cabe79").get_result()
 workspace_id = workspace['workspace_id']
+#workspace = assistant.get_workspace(workspace_id=workspace_id).get_result()
 
 #Rota Inicial
 @app.route('/')
@@ -80,24 +91,27 @@ def chat():
             }
         ).get_result()
         
-        return jsonify(cliente=cliente, resposta=response["output"]["text"], idConversa=response["context"]["conversation_id"]) 
+        return jsonify(cliente=cliente, resposta=response["output"]["text"], context=response["context"]) 
         
     if request.method == 'POST':
         req = request.json        
         response = assistant.message(
             workspace_id=workspace_id,
-            
             input={
                'text': req["text"]
             },
-            context={
-               req['perfil'] : True,
-               "conversation_id" : req["conversation_id"]
-            }
+            context= req["context"]
         ).get_result()
 
+        if response["output"]["text"] == "$foto_identidade":
+            x = "x"
+        elif response["output"]["text"] == "$foto_contrato":
+            x = "x"
+        elif response["output"]["text"] == "$foto_poste":
+            x = "x"
 
-        return jsonify(resposta=response["output"]["text"]) 
+
+        return jsonify(resposta=response["output"]["text"],context=response["context"]) 
 
 #Endpoint GET para identificar usuario
 @app.route('/criardado')
