@@ -3,6 +3,7 @@ blis==0.2.4
 certifi==2019.6.16
 chardet==3.0.4
 ChatterBot==1.0.5
+chatterbot-corpus==1.2.0
 Click==7.0
 cymem==2.0.2
 elasticsearch==7.0.2
@@ -24,7 +25,7 @@ pymongo==3.8.0
 pyrsistent==0.15.2
 python-dateutil==2.7.5
 pytz==2019.1
-PyYAML==5.1.1
+PyYAML==3.13
 requests==2.22.0
 six==1.12.0
 spacy==2.1.4
@@ -35,4 +36,4 @@ tqdm==4.32.2
 urllib3==1.25.3
 wasabi==0.2.2
 Werkzeug==0.15.4
-
+chatterbot_corpus==1.2.0
