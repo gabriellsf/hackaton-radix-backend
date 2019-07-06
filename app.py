@@ -1,4 +1,5 @@
 import uuid
+import base64
 from pymongo import MongoClient
 from flask import Flask 
 from flask import request
@@ -10,6 +11,7 @@ from elasticsearch import Elasticsearch
 from chatterbot import ChatBot
 from chatterbot.trainers import ListTrainer
 from chatterbot.response_selection import get_first_response
+
 
 
 #Conexão com banco ElasticSearch
@@ -24,7 +26,7 @@ es = Elasticsearch(
 #Conexão com banco MongoDB
 username = urllib.parse.quote_plus('gabs')
 password = urllib.parse.quote_plus('admin')
-client = MongoClient('mongodb://%s:%s@cluster0-dp1ye.mongodb.net/test?retryWrites=true&w=majority' % (username, password))
+client = MongoClient('mongodb+srv://%s:%s@cluster0-dp1ye.mongodb.net/test?retryWrites=true&w=majority' % (username, password))
 db = client.cpfl
 
 bot = ChatBot('CPFL ChatBot',
@@ -68,17 +70,63 @@ def chat():
         sessao = prepareMongoToEs(sessao)
         es.index(index="sessao", doc_type='doc_sessao', id=uuid.uuid4().hex, body=sessao)
 
-        return jsonify(cliente=cliente) 
+        return jsonify(cliente=cliente,sessao=sessao) 
         
     if request.method == 'POST':
         req = request.json
         resp = bot.get_response(req['resposta'])
+
+        if req['foto'] != None and req['foto'] != "":
+            decoded = base64.decodebytes(req['foto'])
+
+
+            resp = {"text":"sucesso"}
+            
+        mensagem = {
+            
+        }
+        mensagemCol = db.messagem
+
+
         return jsonify(menssagem={"sucesso":"true","resposta":resp.text}) 
+
+#Endpoint GET para identificar usuario
+@app.route('/criardado')
+def createData():
+    clientes = [{
+        "_id" : "1",
+        "nome" : "Thais",
+        "sobrenome" : "Araujo",
+        "idade" : "25",
+        "perfil" : "noob",
+        "data_criacao" : datetime.now().isoformat()
+    },{
+        "_id" : "2",
+        "nome" : "Roberto",
+        "sobrenome" : "Carlos",
+        "idade" : "55",
+        "perfil" : "conservador",
+        "data_criacao" : datetime.now().isoformat()
+    },{
+        "_id" : "3",
+        "nome" : "Carmen",
+        "sobrenome" : "Sandiego",
+        "idade" : "39",
+        "perfil" : "semtempo",
+        "data_criacao" : datetime.now().isoformat()
+    }]
+
+    for cliente in clientes:
+        clienteCol = db.cliente
+        clienteCol.insert_one(cliente)
+        clienteEs = prepareMongoToEs(cliente)
+        es.index(index="cliente", doc_type='doc_cliente', id=uuid.uuid4().hex, body=clienteEs)
 
 def prepareMongoToEs(data):
     data["mongo_id"] = data["_id"]
     del data["_id"]
     return data
+
 
 if __name__ == '__main__':
     app.run(debug=True)
