@@ -1,4 +1,4 @@
-from config import configWorkspace
+import configWorkspace
 import uuid
 import base64
 import requests
@@ -11,9 +11,6 @@ app = Flask(__name__)
 import urllib.parse
 from datetime import datetime
 from elasticsearch import Elasticsearch
-from chatterbot import ChatBot
-from chatterbot.trainers import ListTrainer
-from chatterbot.response_selection import get_first_response
 from ibm_watson import AssistantV1
 
 
@@ -38,12 +35,25 @@ client = MongoClient('mongodb+srv://%s:%s@cluster0-dp1ye.mongodb.net/test?retryW
 db = client.cpfl
 
 assistant = AssistantV1(
-    version='',
+    version='2019-07-06',
     iam_apikey='amF01PbQcjLXKTbOodjJ3wDLJBcdNS2mRKHaaQqELsfE',
     url='https://gateway.watsonplatform.net/assistant/api'
 )
-assistant.disable_SSL_verification()
+#assistant.disable_SSL_verification()
 assistant.set_http_config({'timeout': 100})
+
+#workspace = assistant.create_workspace(
+    #name=configWorkspace.data['name'],
+    #description=configWorkspace.data['description'],
+    #language=configWorkspace.data['language'],
+    #intents=configWorkspace.data['intents'],
+    #entities=configWorkspace.data['entities'],
+    #counterexamples=configWorkspace.data['counterexamples'],
+    #metadata=configWorkspace.data['metadata']).get_result()
+
+workspace = assistant.get_workspace(workspace_id="0f156808-de0f-4c7c-a97f-408808cabe79", export=True).get_result()
+
+workspace_id = workspace['workspace_id']
 
 #Rota Inicial
 @app.route('/')
@@ -57,19 +67,30 @@ def hello():
 def chat():
     if request.method == 'GET':
         clienteCol = db.cliente
-        cliente = clienteCol.find({"_id": request.args.get('id')})
+        cliente = clienteCol.find_one({"_id": request.args.get('id')})
         
         sessao = {
             "_id" : uuid.uuid4().hex,
             "cliente": cliente,
             "data_insercao" : datetime.now().isoformat()
         }
+
         sessaoCol = db.sessao
         sessaoCol.insert_one(sessao)
         sessao = prepareMongoToEs(sessao)
         es.index(index="sessao", doc_type='doc_sessao', id=uuid.uuid4().hex, body=sessao)
 
-        return jsonify(cliente=cliente,sessao=sessao) 
+        response = assistant.message(
+            workspace_id=workspace_id,
+            input={
+                'text': 'Olá'
+            },
+            context={
+                'noob': True
+            }
+        ).get_result()
+
+        return jsonify(cliente=cliente,sessao=sessao,resposta=response) 
         
     if request.method == 'POST':
         req = request.json
@@ -94,21 +115,24 @@ def createData():
         "sobrenome" : "Araujo",
         "idade" : "25",
         "perfil" : "noob",
-        "data_criacao" : datetime.now().isoformat()
+        "data_criacao" : datetime.now().isoformat(),
+        "avatar": "https://www.stickees.com/files/avatars/male-avatars/1697-andrew-sticker.png"
     },{
         "_id" : "2",
         "nome" : "Roberto",
         "sobrenome" : "Carlos",
         "idade" : "55",
         "perfil" : "conservador",
-        "data_criacao" : datetime.now().isoformat()
+        "data_criacao" : datetime.now().isoformat(),
+        "avatar": "https://image.flaticon.com/icons/svg/145/145850.svg"
     },{
         "_id" : "3",
         "nome" : "Carmen",
         "sobrenome" : "Sandiego",
         "idade" : "39",
         "perfil" : "semtempo",
-        "data_criacao" : datetime.now().isoformat()
+        "data_criacao" : datetime.now().isoformat(),
+        "avatar": "https://image.flaticon.com/icons/svg/145/145850.svg"
     }]
 
     for cliente in clientes:

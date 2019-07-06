@@ -1,4 +1,4 @@
-config:{
+data:{
   "name": "CPFLMudanca",
   "intents": [
     {
@@ -262,9 +262,9 @@ config:{
   "counterexamples": [],
   "system_settings": {
     "tooling": {
-      "store_generic_responses": true
+      "store_generic_responses": True
     }
   },
-  "learning_opt_out": false,
+  "learning_opt_out": False,
   "status": "Available"
 }
