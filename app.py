@@ -13,7 +13,7 @@ from datetime import datetime
 from elasticsearch import Elasticsearch
 from ibm_watson import AssistantV1
 
-
+CORS(app)
 API_FACES_ENDPOINT = 'https://radixhack.cognitiveservices.azure.com/face/v1.0/'
 detectUrl = API_FACES_ENDPOINT+"/detect"
 verifyUrl = API_FACES_ENDPOINT+"/verify"
@@ -94,10 +94,6 @@ def chat():
         
     if request.method == 'POST':
         req = request.json
-        if req["_id"] != None and req["_id"] != "":
-            req["_id"] = assistant.create_workspace()
-            req["text"] = "Olá"
-        
         response = assistant.message(workspace_id=req["_id"], input={'text': req["text"]}).get_result()
         
         print(response)

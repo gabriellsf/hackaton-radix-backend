@@ -8,7 +8,8 @@ Click==7.0
 cymem==2.0.2
 dnspython==1.16.0
 elasticsearch==7.0.2
-Flask==1.0.3
+Flask==1.1.0
+Flask-Cors==3.0.8
 get==2019.4.13
 gunicorn==19.4.5
 ibm-cloud-sdk-core==0.5.1
