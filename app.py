@@ -28,7 +28,6 @@ client = MongoClient('mongodb://%s:%s@cluster0-dp1ye.mongodb.net/test?retryWrite
 db = client.cpfl
 
 bot = ChatBot('CPFL ChatBot',
-    storage_adapter='chatterbot.storage.SQLStorageAdapter',
     logic_adapters=[
         {
             'import_path': 'chatterbot.logic.BestMatch',
