@@ -83,10 +83,21 @@ def chat():
         return jsonify(cliente=cliente, resposta=response["output"]["text"], idConversa=response["context"]["conversation_id"]) 
         
     if request.method == 'POST':
-        req = request.json
-        response = assistant.message(workspace_id=workspace_id, input={'text': req["text"]}).get_result()
+        req = request.json        
+        response = assistant.message(
+            workspace_id=workspace_id,
+            
+            input={
+               'text': req["text"]
+            },
+            context={
+               req['perfil'] : True,
+               "conversation_id" : req["conversation_id"]
+            }
+        ).get_result()
 
-        return jsonify(resposta=response["output"]["text"], idConversa=response["context"]["conversation_id"]) 
+
+        return jsonify(resposta=response["output"]["text"]) 
 
 #Endpoint GET para identificar usuario
 @app.route('/criardado')
