@@ -7,6 +7,9 @@ app = Flask(__name__)
 import urllib.parse
 from datetime import datetime
 from elasticsearch import Elasticsearch
+from chatterbot import ChatBot
+from chatterbot.trainers import ListTrainer
+
 
 #Conexão com banco ElasticSearch
 es = Elasticsearch(
@@ -26,7 +29,18 @@ db = client.cpfl
 #Rota Inicial
 @app.route('/')
 def hello():
-    Bem vindo a API do Atendente CPFL
+    bot = ChatBot('CPFL ChatBot')
+
+    conversa = ['Oi', 'Olá', 'Tudo bem?', 'Tudo ótimo', 
+            'Você gosta de programar?', 'Sim, eu programo em Python']
+
+    trainer = ListTrainer(bot)
+    trainer.train(conversa)
+
+    response = chatbot.get_response("Oi")
+    return response
+
+    #*return "Bem vindo a API do Atendente CPFL"
 
 
 #Endpoint GET para identificar usuario
