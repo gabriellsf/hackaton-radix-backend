@@ -9,6 +9,7 @@ from datetime import datetime
 from elasticsearch import Elasticsearch
 from chatterbot import ChatBot
 from chatterbot.trainers import ListTrainer
+from chatterbot.response_selection import get_first_response
 
 
 #Conexão com banco ElasticSearch
@@ -23,90 +24,66 @@ es = Elasticsearch(
 #Conexão com banco MongoDB
 username = urllib.parse.quote_plus('gabs')
 password = urllib.parse.quote_plus('admin')
-client = MongoClient('mongodb+srv://%s:%s@cluster0-dp1ye.mongodb.net/test?retryWrites=true&w=majority' % (username, password))
+client = MongoClient('mongodb://%s:%s@cluster0-dp1ye.mongodb.net/test?retryWrites=true&w=majority' % (username, password))
 db = client.cpfl
+
+bot = ChatBot('CPFL ChatBot',
+    storage_adapter='chatterbot.storage.SQLStorageAdapter',
+    logic_adapters=[
+        {
+            'import_path': 'chatterbot.logic.BestMatch',
+            'default_response': 'I am sorry, but I do not understand.',
+            'maximum_similarity_threshold': 0.70,
+            'response_selection_method': get_first_response
+        }
+    ]
+)
+
+conversa = ['Oi', 'Olá', 'Tudo bem?', 'Tudo ótimo', 
+        'Você gosta de programar?', 'Sim, eu programo em Python']
+
+trainer = ListTrainer(bot)
+trainer.train(conversa)
 
 #Rota Inicial
 @app.route('/')
 def hello():
-    bot = ChatBot('CPFL ChatBot')
+    response = bot.get_response('Oi')
+    print(response)
 
-    conversa = ['Oi', 'Olá', 'Tudo bem?', 'Tudo ótimo', 
-            'Você gosta de programar?', 'Sim, eu programo em Python']
-
-    trainer = ListTrainer(bot)
-    trainer.train(conversa)
-
-    response = chatbot.get_response("Oi")
-    return response
-
-    #*return "Bem vindo a API do Atendente CPFL"
+    return "Bem vindo a API do Atendente CPFL"
 
 
 #Endpoint GET para identificar usuario
-@app.route('/favorites', methods=['GET','POST'])
-def favoritos():
+#Endpoint POST para conversa
+@app.route('/chat', methods=['GET','POST'])
+def chat():
     if request.method == 'GET':
-        cliente = db.cliente
+        clienteCol = db.cliente
+        cliente = clienteCol.find({"_id": request.args.get('id')})
+        
+        sessao = {
+            "_id" : uuid.uuid4().hex,
+            "cliente": cliente,
+            "data_insercao" : datetime.now().isoformat()
+        }
+        sessaoCol = db.sessao
+        sessaoCol.insert_one(sessao)
+        sessao = prepareMongoToEs(sessao)
+        es.index(index="sessao", doc_type='doc_sessao', id=uuid.uuid4().hex, body=sessao)
 
-        for favorito in favoritos.find({"cliente.cliente_empresa_id": request.args.get('cliente')}):
-            print(favorito)
-            resultado.append(favorito["motorista"])
-
-        return jsonify(favoritos=resultado) 
-    
+        return jsonify(cliente=cliente) 
         
     if request.method == 'POST':
         req = request.json
-        motoristas = db.motorista
-        motorista = motoristas.find_one({"motorista_empresa_id":req['motorista_empresa_id']})
+        resp = bot.get_response(req['resposta'])
+        print(resp)
+        return jsonify(menssagem={"sucesso":"true"}) 
 
-        if motorista == None:   
-            motorista = { 
-                "_id" : uuid.uuid4().hex,
-                "nome" : req['nome_motorista'],
-                "foto" : req['foto'],
-                "motorista_empresa_id" : req['motorista_empresa_id'],
-                "empresa" : req['empresa'], 
-                "data_insercao" : datetime.now().isoformat()
-            }
-            motorista["mongo_id"] = motorista["_id"] 
-            motoristas.insert_one(motorista)
-            del motorista["_id"]
-            es.index(index="motorista", doc_type='doc_motorista', id=uuid.uuid4().hex, body=motorista)
-
-        clientes = db.cliente
-        cliente = clientes.find_one({"cliente_empresa_id":req['cliente_empresa_id']})
-
-        if cliente == None:
-            cliente = {
-                "_id" : uuid.uuid4().hex,
-                "nome" : req['nome_cliente'],
-                "cliente_empresa_id" : req['cliente_empresa_id'],
-                "empresa" : req['empresa'],
-                "data_insercao" : datetime.now().isoformat()
-            }
-            cliente["mongo_id"] = cliente["_id"] 
-            clientes.insert_one(cliente)
-            del cliente["_id"]
-            es.index(index="cliente", doc_type='doc_cliente', id=uuid.uuid4().hex, body=cliente)
-
-        favorito = {
-            "_id" : uuid.uuid4().hex,
-            "motorista" : motorista,
-            "cliente" : cliente,
-            "empresa" : req['empresa'],
-            "data_insercao" : datetime.now().isoformat()
-        }
-
-        favoritos = db.favorito
-        favorito["mongo_id"] = favorito["_id"] 
-        favoritos.insert_one(favorito)
-        del favorito["_id"]
-        es.index(index="favorito", doc_type='doc_favorito', id=uuid.uuid4().hex, body=favorito)
-
-    return jsonify(menssagem={"sucesso":"true"}) 
-
+def prepareMongoToEs(data):
+    data["mongo_id"] = data["_id"]
+    del data["_id"]
+    return data
 
 if __name__ == '__main__':
     app.run(debug=True)
