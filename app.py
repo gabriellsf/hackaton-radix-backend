@@ -5,6 +5,7 @@ import requests
 import json
 from pymongo import MongoClient
 from flask import Flask 
+from flask_cors import CORS
 from flask import request
 from flask import jsonify
 app = Flask(__name__)
