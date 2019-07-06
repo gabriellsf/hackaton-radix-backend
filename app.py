@@ -122,6 +122,8 @@ def createData():
         clienteEs = prepareMongoToEs(cliente)
         es.index(index="cliente", doc_type='doc_cliente', id=uuid.uuid4().hex, body=clienteEs)
 
+    return "The mock is a lie"
+
 def prepareMongoToEs(data):
     data["mongo_id"] = data["_id"]
     del data["_id"]
