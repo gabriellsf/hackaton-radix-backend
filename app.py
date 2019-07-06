@@ -1,3 +1,4 @@
+from config import configWorkspace
 import uuid
 import base64
 import requests
@@ -13,6 +14,7 @@ from elasticsearch import Elasticsearch
 from chatterbot import ChatBot
 from chatterbot.trainers import ListTrainer
 from chatterbot.response_selection import get_first_response
+from ibm_watson import AssistantV1
 
 
 API_FACES_ENDPOINT = 'https://radixhack.cognitiveservices.azure.com/face/v1.0/'
@@ -35,86 +37,13 @@ password = urllib.parse.quote_plus('admin')
 client = MongoClient('mongodb+srv://%s:%s@cluster0-dp1ye.mongodb.net/test?retryWrites=true&w=majority' % (username, password))
 db = client.cpfl
 
-bot = ChatBot('CPFL ChatBot',
-    logic_adapters=[
-        {
-            'import_path': 'chatterbot.logic.BestMatch',
-            'default_response': 'I am sorry, but I do not understand.',
-            'maximum_similarity_threshold': 0.70,
-            'response_selection_method': get_first_response
-        }
-    ]
+assistant = AssistantV1(
+    version='',
+    iam_apikey='amF01PbQcjLXKTbOodjJ3wDLJBcdNS2mRKHaaQqELsfE',
+    url='https://gateway.watsonplatform.net/assistant/api'
 )
-
-conversas = []
-
-conversas.append(['Oi',
-    'Posso te ajudar com alguma coisa ?',
-    'Eu estou de mudança e preciso trocar o titular',
-    'Claro. Você sabe como fazer isso ?',
-    'Não',
-    'Alguem mora no endereço atualmente ? Preciso saber se lá já possui luz',
-    'Sim, moram lá.',
-    'Entendi, então faremos uma transferencia de titular. Para qual endereço você vai se mudar ?',
-    '$$endereço$$',
-    'Obrigado, agora preciso só que me confirme sua identidade. Pode me mandar uma foto sua segurando seu RG (com a foto pra camera)?',
-    '$$foto_usuario$$',
-    'Ficou ótimo, conseguimos te ver bem. Última coisa, você poderia mandar uma foto do contrato da casa, de aluguel ou algo do tipo ?',
-    '$$foto_contrato$$',
-    'Perfeito, já tenho todas as informações que preciso! Em breve ligaremos confirmando a sua troca de titularidade.'
-])
-
-conversas.append(['Olá',
-    'Posso te ajudar com alguma coisa ?',
-    'Quero realizar a troca de titular',
-    'Claro. Você sabe como fazer isso ?',
-    'Sim',
-    'Entendi, então faremos uma transferencia de titular. Para qual endereço você vai se mudar ?',
-    '$$endereço$$',
-    'Obrigado, agora preciso só que me confirme sua identidade. Pode me mandar uma foto sua segurando seu RG (com a foto pra camera)?',
-    '$$foto_usuario$$',
-    'Ficou ótimo, conseguimos te ver bem. Última coisa, você poderia mandar uma foto do contrato da casa, de aluguel ou algo do tipo ?',
-    '$$foto_contrato$$',
-    'Perfeito, já tenho todas as informações que preciso! Em breve ligaremos confirmando a sua troca de titularidade.'
-])
-
-conversas.append(['Olá',
-    'Posso te ajudar com alguma coisa ?',
-    'Quero fazer uma transferencia de titular',
-    'Claro. Você sabe como fazer isso ?',
-    'Sim',
-    'Entendi, então faremos uma transferencia de titular. Para qual endereço você vai se mudar ?',
-    '$$endereço$$',
-    'Obrigado, agora preciso só que me confirme sua identidade. Pode me mandar uma foto sua segurando seu RG (com a foto pra camera)?',
-    '$$foto_usuario$$',
-    'Ficou ótimo, conseguimos te ver bem. Última coisa, você poderia mandar uma foto do contrato da casa, de aluguel ou algo do tipo ?',
-    '$$foto_contrato$$',
-    'Perfeito, já tenho todas as informações que preciso! Em breve ligaremos confirmando a sua troca de titularidade.'
-])
-
-conversas.append(['Bom dia',
-    'Bom dia, posso te ajudar com alguma coisa ?',
-    'Vou fazer uma mudança.',
-    'Claro. Você sabe como fazer isso ?',
-    'Ainda não',
-    'Alguem mora no endereço atualmente ? Preciso saber se lá já possui luz',
-    'Não a casa é nova',
-    'Entendi, então faremos a instalação de um novo ponto. Para qual endereço você vai se mudar ?',
-    '$$endereço$$',
-    'Obrigado, agora preciso só que me confirme sua identidade. Pode me mandar uma foto sua segurando seu RG (com a foto pra camera)?',
-    '$$foto_usuario$$',
-    'Ficou ótimo, conseguimos te ver bem. você poderia mandar uma foto do contrato da casa, de aluguel ou algo do tipo ?',
-    '$$foto_contrato$$',
-    'Perfeito, só precisamos de mais uma informação. O pote próximo precisa estar de acordo com nosso regulamento como descrito nesse link, ele está de acordo?',
-    'Sim está',
-    'Você poderia nos mandar uma foto dele ?',
-    '$$foto_poste$$',
-    'Já tenho todas as informações que preciso! Em breve ligaremos confirmando a sua instalação.'
-])
-
-trainer = ListTrainer(bot)
-for conversa in conversas:    
-    trainer.train(conversa)
+assistant.disable_SSL_verification()
+assistant.set_http_config({'timeout': 100})
 
 #Rota Inicial
 @app.route('/')
@@ -144,50 +73,17 @@ def chat():
         
     if request.method == 'POST':
         req = request.json
-        resp = bot.get_response(req['resposta'])
-
-        if req['foto'] != None and req['foto'] != "":
-            decoded = base64.decodebytes(req['foto'])
-
-            
-
-            headers = {
-                "Content-Type" : "application/octet-stream",
-                "Ocp-Apim-Subscription-Key" : FACES_KEY
-            }
-
-            r = requests.post(detectUrl, data=decoded, headers=headers)
-            data = r.json()
-
-            if len(data['faceId']) != 2:
-                return 
+        if req["_id"] != None and req["_id"] != "":
+            req["_id"] = assistant.create_workspace()
+            req["text"] = "Olá"
+        
+        response = assistant.message(workspace_id=req["_id"], input={'text': req["text"]}).get_result()
+        
+        print(response)
+        print(json.dumps(response, indent=2))
 
 
-
-            headers = {
-                "Content-Type" : "application/json",
-                "Ocp-Apim-Subscription-Key" : FACES_KEY
-            }
-
-            body = {
-                "faceId1" : data['faceId'][0],
-                "faceId1" : data['faceId'][1],
-            }
-
-            r = requests.post(verifyUrl, data=body, headers=headers)
-            data = r.json()
-
-            confidence = data['confidence']
-
-            resp = {"text":"sucesso"}
-            
-        mensagem = {
-            
-        }
-        mensagemCol = db.messagem
-
-
-        return jsonify(menssagem={"sucesso":"true","resposta":resp.text}) 
+        return jsonify(menssagem={"sucesso":"true"},nextreq={"_id":req["id"]}) 
 
 #Endpoint GET para identificar usuario
 @app.route('/criardado')
