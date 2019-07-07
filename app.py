@@ -1,6 +1,6 @@
 import configWorkspace
 import uuid
-import base64
+import binascii
 import requests
 import json
 from pymongo import MongoClient
@@ -94,7 +94,7 @@ def chat():
 
         if req['foto'] != None and req['foto'] != "":
             sucesso = "Sim" 
-            decoded = base64.decodebytes(req['foto'])
+            decoded = binascii.b2a_base64(req['foto'])
             headers = {
                 "Content-Type" : "application/octet-stream",
                 "Ocp-Apim-Subscription-Key" : FACES_KEY
