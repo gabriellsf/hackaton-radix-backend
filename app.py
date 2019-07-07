@@ -105,7 +105,20 @@ def chat():
         if req['foto'] != None and req['foto'] != "":
             sucesso = "Sim" 
             if response["output"]["text"][0] == "foto_identidade":
-                
+                #Tentativa 1
+                #decoded = binascii.a2b_base64(req['foto'])
+                #headers = {
+                #    "Content-Type" : "application/octet-stream",
+                #    "Ocp-Apim-Subscription-Key" : FACES_KEY
+                #}
+                #r = requests.post(detectUrl, decoded, headers=headers)
+                #Tentativa 2
+                #filename = "imageToSave"  + datetime.now().isoformat() + ".jpg"
+                #with open(filename, "wb") as fh:
+                #    fh.write(base64.binascii.a2b_base64((req['foto'])))
+                #with open(filename, "rb") as fh:
+                #r = face_client.face.detect_with_stream(fh)
+
                 #Mock due to service instability to send file
                 data = [{
                         "faceId": "0d082829-79fb-4e76-8360-d2cc78b84e9c",
