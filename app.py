@@ -137,7 +137,7 @@ def chat():
                 context= req["context"]
             ).get_result()
 
-        return jsonify(resposta=response["output"]["text"],context=response["context"]) 
+    return jsonify(resposta=response["output"]["text"],context=response["context"]) 
 
 #Endpoint GET para identificar usuario
 @app.route('/criardado')
