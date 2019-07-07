@@ -94,7 +94,7 @@ def chat():
 
         if req['foto'] != None and req['foto'] != "":
             sucesso = "Sim" 
-            decoded = binascii.b2a_base64(req['foto'])
+            decoded = binascii.b2a_base64(str.encode(req['foto']))
             headers = {
                 "Content-Type" : "application/octet-stream",
                 "Ocp-Apim-Subscription-Key" : FACES_KEY
