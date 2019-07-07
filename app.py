@@ -1,7 +1,9 @@
 import configWorkspace
 import sys
 import uuid
+import base64
 import binascii
+import codecs
 import requests
 import json
 import urllib.parse
@@ -11,13 +13,16 @@ from flask_cors import CORS
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from ibm_watson import AssistantV1
+from azure.cognitiveservices.vision.face import FaceClient
+from msrest.authentication import CognitiveServicesCredentials
+from azure.cognitiveservices.vision.face.models import FaceAttributeType, TrainingStatusType, Person
 
 app = Flask(__name__)
 CORS(app)
 
 API_FACES_ENDPOINT = 'https://radixhack.cognitiveservices.azure.com/face/v1.0/'
-detectUrl = API_FACES_ENDPOINT+"/detect"
-verifyUrl = API_FACES_ENDPOINT+"/verify"
+detectUrl = API_FACES_ENDPOINT+"detect"
+verifyUrl = API_FACES_ENDPOINT+"verify"
 FACES_KEY = '9a7ff2d4826646de85ffc1fbbb6fba5b'
 
 #Conexão com banco ElasticSearch
@@ -41,6 +46,8 @@ assistant = AssistantV1(
     url='https://gateway.watsonplatform.net/assistant/api'
 )
 assistant.set_http_config({'timeout': 100})
+
+face_client = FaceClient(API_FACES_ENDPOINT, CognitiveServicesCredentials(FACES_KEY))
 
 workspace = assistant.get_workspace(workspace_id="0f156808-de0f-4c7c-a97f-408808cabe79").get_result()
 workspace_id = workspace['workspace_id']
@@ -86,27 +93,50 @@ def chat():
         return jsonify(cliente=cliente, resposta=resposta, context=response["context"]) 
         
     if request.method == 'POST':
-        req = request.json        
+        req = request.json       
         response = assistant.message(
             workspace_id=workspace_id,
             input={
-               'text': req["text"]
+            'text': req["text"]
             },
             context= req["context"]
         ).get_result()
-        print("Passou aqui 1")
-        print(req["text"])
-        sys.stdout.flush()
+
         if req['foto'] != None and req['foto'] != "":
             sucesso = "Sim" 
-            decoded = binascii.b2a_base64(str.encode(req['foto']))
-            headers = {
-                "Content-Type" : "application/octet-stream",
-                "Ocp-Apim-Subscription-Key" : FACES_KEY
-            }
             print(response)
-            if response["output"]["text"] == "#foto_identidade":
-                r = requests.post(detectUrl, data=decoded, headers=headers)
+            if response["output"]["text"][0] == "foto_identidade":
+                
+                #decoded = binascii.a2b_base64(req['foto'])
+                #decoded = base64.decodebytes(req['foto'])
+                #imgdata = base64.b64decode(req['foto'])
+                #filename = "imageToSend" + datetime.now().isoformat() + ".png"
+                #with open(filename, 'wb') as f:
+                    #f.write(imgdata)
+
+                #data = open(filename, 'rb').read()
+
+                #data = open(fh, "rb").read()
+
+                #bimage = "".join(["{:08b}".format(x) for x in decoded])
+
+                #data = codecs.decode(req['foto'], 'base64')
+                #binascii.a2b_base64(base64_data)
+
+                #headers = {
+                #    "Content-Type" : "application/octet-stream",
+                #    "Ocp-Apim-Subscription-Key" : FACES_KEY
+                #}
+                #r = requests.post(detectUrl, decoded, headers=headers)
+
+                filename = "imageToSave"  + datetime.now().isoformat() + ".jpg"
+                with open(filename, "wb") as fh:
+                    fh.write(base64.binascii.a2b_base64((req['foto'])))
+
+                with open(filename, "rb") as fh:
+                    r = face_client.face.detect_with_stream(fh)
+
+                print(r)
                 data = r.json()
                 print(data)
                 sys.stdout.flush()
@@ -130,9 +160,9 @@ def chat():
                     if confidence < 0.4:
                         sucesso = "Não"   
 
-            elif response["output"]["text"] == "#foto_contrato":
+            elif response["output"]["text"][0] == "#foto_contrato":
                 x = "x"
-            elif response["output"]["text"] == "#foto_poste":
+            elif response["output"]["text"][0] == "#foto_poste":
                 x = "x"
             else:
                 sucesso = uuid.uuid4().hex
@@ -146,6 +176,7 @@ def chat():
             ).get_result()
 
         return jsonify(resposta=response["output"]["text"],context=response["context"]) 
+            
 
 
 def prepareMongoToEs(data):
