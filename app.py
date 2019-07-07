@@ -50,7 +50,6 @@ workspace_id = workspace['workspace_id']
 def hello():
     return "Bem vindo a API do Atendente CPFL"
 
-
 #Endpoint GET para identificar usuario
 #Endpoint POST para conversa
 @app.route('/chat', methods=['GET','POST'])
@@ -80,7 +79,11 @@ def chat():
             }
         ).get_result()
         
-        return jsonify(cliente=cliente, resposta=response["output"]["text"], context=response["context"]) 
+        resposta = []
+        for resp in response["output"]["text"]:
+            resposta.append(resp.replace("#nome", cliente["nome"]))
+
+        return jsonify(cliente=cliente, resposta=resposta, context=response["context"]) 
         
     if request.method == 'POST':
         req = request.json        
@@ -139,6 +142,13 @@ def chat():
 
         return jsonify(resposta=response["output"]["text"],context=response["context"]) 
 
+
+def prepareMongoToEs(data):
+    data["mongo_id"] = data["_id"]
+    del data["_id"]
+    return data
+
+
 #Endpoint GET para identificar usuario
 @app.route('/criardado')
 def createData():
@@ -175,12 +185,6 @@ def createData():
         es.index(index="cliente", doc_type='doc_cliente', id=uuid.uuid4().hex, body=clienteEs)
 
     return "The mock is a lie"
-
-def prepareMongoToEs(data):
-    data["mongo_id"] = data["_id"]
-    del data["_id"]
-    return data
-
 
 if __name__ == '__main__':
     app.run(debug=True)
