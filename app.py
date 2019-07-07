@@ -1,4 +1,5 @@
 import configWorkspace
+import sys
 import uuid
 import binascii
 import requests
@@ -93,7 +94,9 @@ def chat():
             },
             context= req["context"]
         ).get_result()
-
+        print("Passou aqui 1")
+        print(req["text"])
+        sys.stdout.flush()
         if req['foto'] != None and req['foto'] != "":
             sucesso = "Sim" 
             decoded = binascii.b2a_base64(str.encode(req['foto']))
@@ -101,11 +104,12 @@ def chat():
                 "Content-Type" : "application/octet-stream",
                 "Ocp-Apim-Subscription-Key" : FACES_KEY
             }
-
-            if response["output"]["text"] == "$foto_identidade":
+            print(response)
+            if response["output"]["text"] == "#foto_identidade":
                 r = requests.post(detectUrl, data=decoded, headers=headers)
                 data = r.json()
                 print(data)
+                sys.stdout.flush()
                 if len(data['faceId']) < 2:
                     sucesso = "Não" 
                 else:
@@ -122,12 +126,13 @@ def chat():
                     data = r.json()
                     confidence = data['confidence']
                     print(confidence)
+                    sys.stdout.flush()
                     if confidence < 0.4:
                         sucesso = "Não"   
 
-            elif response["output"]["text"] == "$foto_contrato":
+            elif response["output"]["text"] == "#foto_contrato":
                 x = "x"
-            elif response["output"]["text"] == "$foto_poste":
+            elif response["output"]["text"] == "#foto_poste":
                 x = "x"
             else:
                 sucesso = uuid.uuid4().hex
