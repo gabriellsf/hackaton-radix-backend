@@ -42,19 +42,8 @@ assistant = AssistantV1(
 )
 assistant.set_http_config({'timeout': 100})
 
-#workspace = assistant.create_workspace(
-    #name=configWorkspace.data['name'],
-    #description=configWorkspace.data['description'],
-    #language=configWorkspace.data['language'],
-    #intents=configWorkspace.data['intents'],
-    #entities=configWorkspace.data['entities'],
-    #counterexamples=configWorkspace.data['counterexamples'],
-    #metadata=configWorkspace.data['metadata']
-#).get_result()
-
 workspace = assistant.get_workspace(workspace_id="0f156808-de0f-4c7c-a97f-408808cabe79").get_result()
 workspace_id = workspace['workspace_id']
-#workspace = assistant.get_workspace(workspace_id=workspace_id).get_result()
 
 #Rota Inicial
 @app.route('/')
