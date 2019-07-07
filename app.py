@@ -103,13 +103,50 @@ def chat():
             context= req["context"]
         ).get_result()
 
-        if response["output"]["text"] == "$foto_identidade":
-            x = "x"
-        elif response["output"]["text"] == "$foto_contrato":
-            x = "x"
-        elif response["output"]["text"] == "$foto_poste":
-            x = "x"
+        if req['foto'] != None and req['foto'] != "":
+            sucesso = "Sim" 
+            decoded = base64.decodebytes(req['foto'])
+            headers = {
+                "Content-Type" : "application/octet-stream",
+                "Ocp-Apim-Subscription-Key" : FACES_KEY
+            }
 
+            if response["output"]["text"] == "$foto_identidade":
+                r = requests.post(detectUrl, data=decoded, headers=headers)
+                data = r.json()
+                if len(data['faceId']) != 2:
+                    sucesso = "Não" 
+                else:
+                    headers = {
+                        "Content-Type" : "application/json",
+                        "Ocp-Apim-Subscription-Key" : FACES_KEY
+                    }
+                    body = {
+                        "faceId1" : data['faceId'][0],
+                        "faceId2" : data['faceId'][1],
+                    }
+
+                    r = requests.post(verifyUrl, data=body, headers=headers)
+                    data = r.json()
+                    confidence = data['confidence']
+
+                    if confidence < 0.4:
+                        sucesso = "Não"   
+
+            elif response["output"]["text"] == "$foto_contrato":
+                x = "x"
+            elif response["output"]["text"] == "$foto_poste":
+                x = "x"
+            else:
+                sucesso = uuid.uuid4().hex
+
+            response = assistant.message(
+                workspace_id=workspace_id,
+                input={
+                    'text': sucesso
+                },
+                context= req["context"]
+            ).get_result()
 
         return jsonify(resposta=response["output"]["text"],context=response["context"]) 
 
