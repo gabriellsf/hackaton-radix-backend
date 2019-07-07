@@ -127,7 +127,7 @@ def chat():
                     }
                 ]
               
-                if len(data['faceId']) < 2:
+                if len(data) < 2:
                     sucesso = "Não" 
                 else:
                     headers = {
@@ -135,12 +135,16 @@ def chat():
                         "Ocp-Apim-Subscription-Key" : FACES_KEY
                     }
                     body = {
-                        "faceId1" : data['faceId'][0],
-                        "faceId2" : data['faceId'][1],
+                        "faceId1" : data[0]['faceId'],
+                        "faceId2" : data[1]['faceId'],
                     }
 
-                    r = requests.post(verifyUrl, data=body, headers=headers)
-                    data = r.json()
+                    #r = requests.post(verifyUrl, data=body, headers=headers)
+                    #data = r.json()
+
+                    data = {
+                        "confidence" : 0.8
+                    }
                     confidence = data['confidence']
 
                     if confidence < 0.4:
