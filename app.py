@@ -3,18 +3,17 @@ import uuid
 import binascii
 import requests
 import json
-from pymongo import MongoClient
-from flask import Flask 
-from flask_cors import CORS
-from flask import request
-from flask import jsonify
-app = Flask(__name__)
 import urllib.parse
+from pymongo import MongoClient
+from flask import Flask, request, jsonify  
+from flask_cors import CORS
 from datetime import datetime
 from elasticsearch import Elasticsearch
 from ibm_watson import AssistantV1
 
+app = Flask(__name__)
 CORS(app)
+
 API_FACES_ENDPOINT = 'https://radixhack.cognitiveservices.azure.com/face/v1.0/'
 detectUrl = API_FACES_ENDPOINT+"/detect"
 verifyUrl = API_FACES_ENDPOINT+"/verify"
@@ -106,7 +105,8 @@ def chat():
             if response["output"]["text"] == "$foto_identidade":
                 r = requests.post(detectUrl, data=decoded, headers=headers)
                 data = r.json()
-                if len(data['faceId']) != 2:
+                print(data)
+                if len(data['faceId']) < 2:
                     sucesso = "Não" 
                 else:
                     headers = {
@@ -121,7 +121,7 @@ def chat():
                     r = requests.post(verifyUrl, data=body, headers=headers)
                     data = r.json()
                     confidence = data['confidence']
-
+                    print(confidence)
                     if confidence < 0.4:
                         sucesso = "Não"   
 
