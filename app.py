@@ -104,42 +104,29 @@ def chat():
 
         if req['foto'] != None and req['foto'] != "":
             sucesso = "Sim" 
-            print(response)
             if response["output"]["text"][0] == "foto_identidade":
                 
-                #decoded = binascii.a2b_base64(req['foto'])
-                #decoded = base64.decodebytes(req['foto'])
-                #imgdata = base64.b64decode(req['foto'])
-                #filename = "imageToSend" + datetime.now().isoformat() + ".png"
-                #with open(filename, 'wb') as f:
-                    #f.write(imgdata)
-
-                #data = open(filename, 'rb').read()
-
-                #data = open(fh, "rb").read()
-
-                #bimage = "".join(["{:08b}".format(x) for x in decoded])
-
-                #data = codecs.decode(req['foto'], 'base64')
-                #binascii.a2b_base64(base64_data)
-
-                #headers = {
-                #    "Content-Type" : "application/octet-stream",
-                #    "Ocp-Apim-Subscription-Key" : FACES_KEY
-                #}
-                #r = requests.post(detectUrl, decoded, headers=headers)
-
-                filename = "imageToSave"  + datetime.now().isoformat() + ".jpg"
-                with open(filename, "wb") as fh:
-                    fh.write(base64.binascii.a2b_base64((req['foto'])))
-
-                with open(filename, "rb") as fh:
-                    r = face_client.face.detect_with_stream(fh)
-
-                print(r)
-                data = r.json()
-                print(data)
-                sys.stdout.flush()
+                #Mock due to service instability to send file
+                data = [{
+                        "faceId": "0d082829-79fb-4e76-8360-d2cc78b84e9c",
+                        "faceRectangle": {
+                            "top": 733,
+                            "left": 543,
+                            "width": 809,
+                            "height": 809
+                        }
+                    },
+                    {
+                        "faceId": "bdfd3de7-70eb-4f55-bf8c-d7d4391d1134",
+                        "faceRectangle": {
+                            "top": 1410,
+                            "left": 166,
+                            "width": 155,
+                            "height": 155
+                        }
+                    }
+                ]
+              
                 if len(data['faceId']) < 2:
                     sucesso = "Não" 
                 else:
@@ -155,8 +142,7 @@ def chat():
                     r = requests.post(verifyUrl, data=body, headers=headers)
                     data = r.json()
                     confidence = data['confidence']
-                    print(confidence)
-                    sys.stdout.flush()
+
                     if confidence < 0.4:
                         sucesso = "Não"   
 
