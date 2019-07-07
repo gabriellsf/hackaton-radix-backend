@@ -102,6 +102,17 @@ def chat():
             context= req["context"]
         ).get_result()
 
+        mensagem = {
+            "_id" : uuid.uuid4().hex,
+            "texto": req["text"],
+            "data_insercao" : datetime.now().isoformat()
+        }
+
+        mensagemCol = db.mensagem
+        mensagemCol.insert_one(mensagem)
+        mensagem = prepareMongoToEs(mensagem)
+        es.index(index="mensagem", doc_type='doc_mensagem', id=uuid.uuid4().hex, body=mensagem)
+
         if req['foto'] != None and req['foto'] != "":
             sucesso = "Sim" 
             if response["output"]["text"][0] == "foto_identidade":
