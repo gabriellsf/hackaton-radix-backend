@@ -134,7 +134,7 @@ def chat():
                 input={
                     'text': sucesso
                 },
-                context= req["context"]
+                context=response["context"]
             ).get_result()
 
         return jsonify(resposta=response["output"]["text"],context=response["context"]) 
