@@ -7,6 +7,7 @@ import codecs
 import requests
 import json
 import urllib.parse
+import random
 from pymongo import MongoClient
 from flask import Flask, request, jsonify  
 from flask_cors import CORS
@@ -16,6 +17,7 @@ from ibm_watson import AssistantV1
 from azure.cognitiveservices.vision.face import FaceClient
 from msrest.authentication import CognitiveServicesCredentials
 from azure.cognitiveservices.vision.face.models import FaceAttributeType, TrainingStatusType, Person
+
 
 app = Flask(__name__)
 CORS(app)
@@ -235,6 +237,29 @@ def createData():
         es.index(index="cliente", doc_type='doc_cliente', id=uuid.uuid4().hex, body=clienteEs)
 
     return "The mock is a lie"
+
+#Endpoint GET para identificar usuario
+@app.route('/criarmuitodado')
+def createDataBulk():
+    perfis = ["noob","semtempo","conservador"]
+    clientes = []
+    for i in range(100):
+        clientes.append({
+            "_id" : uuid.uuid4().hex,
+            "nome" : "Cliente_" + str(i),
+            "idade" : random.randint(25,60),
+            "perfil" : perfis[random.randint(0,5)%3],
+            "data_criacao" : datetime.now().isoformat(),
+            "avatar": "https://www.stickees.com/files/avatars/male-avatars/1697-andrew-sticker.png"
+        })
+
+    for cliente in clientes:
+        clienteCol = db.cliente
+        clienteCol.insert_one(cliente)
+        clienteEs = prepareMongoToEs(cliente)
+        es.index(index="cliente", doc_type='doc_cliente', id=uuid.uuid4().hex, body=clienteEs)
+
+    return "Fim"
 
 if __name__ == '__main__':
     app.run(debug=True)
