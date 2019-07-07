@@ -1,4 +1,11 @@
-**Como executar o projeto
+##Descrição
+Aplicação backend da hackaton radix 2019 
+Link do repositorio do front end https://github.com/rafaelbatistamarcilio/hackathon-radix-2019
+ 
+Aplicação que realiza a tratação de dados para comunicação entre front end e inteligencia criada Watson
+Alem de buscar e amarzenar os dados, e salva-los em um banco Elastic Search para futura configuração de um DashBoard Kibana 
+
+##Como executar o projeto
 
 Você precisará do Python3 e pip3
 
@@ -27,3 +34,5 @@ POST http://127.0.0.1:5000/chat
 }
 
 
+##Conteudo 
+Arquivo configWorkspace.py contem configuração do IBM Watson
