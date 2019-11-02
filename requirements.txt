@@ -25,7 +25,7 @@ MarkupSafe==1.1.1
 mathparse==0.1.2
 msrest==0.6.8
 murmurhash==1.0.2
-nltk==3.4.4
+nltk==3.4.5
 numpy==1.16.4
 oauthlib==3.0.2
 Pint==0.9
