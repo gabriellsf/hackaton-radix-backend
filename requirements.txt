@@ -2,7 +2,7 @@ attrs==19.1.0
 azure-cognitiveservices-vision-face==0.4.0
 azure-common==1.1.23
 blis==0.2.4
-certifi==2019.6.16
+certifi==2022.12.7
 chardet==3.0.4
 ChatterBot==1.0.5
 chatterbot-corpus==1.2.0
